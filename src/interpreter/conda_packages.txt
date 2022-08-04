@@ -1,0 +1,22 @@
+# python packages
+pycodestyle
+numpy
+pandas
+scipy
+grpcio
+hvplot
+protobuf
+pandasql
+ipython
+matplotlib
+ipykernel
+jupyter_client
+bokeh
+
+# R packages
+r-evaluate
+r-base64enc
+r-knitr
+r-ggplot2
+r-shiny
+r-googlevis

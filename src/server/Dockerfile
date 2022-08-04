@@ -5,17 +5,14 @@ FROM apache/zeppelin:${zeppelin_version} AS zeppelin-distribution
 FROM alpine:3.16.0
 
 ARG zeppelin_version
-ARG http_proxy_ip
-ARG http_proxy_port
-ARG http_proxy
-ARG https_proxy
 
-LABEL org.opencontainers.image.authors="Thomas Decaux"
-LABEL org.opencontainers.image.vendor="datatok"
-LABEL org.opencontainers.image.source="https://github.com/datatok/docker-zeppelin"
-LABEL org.opencontainers.image.version=${zeppelin_version}
-
-RUN apk add --no-cache tini curl wget git openjdk8-jre bash
+RUN apk add --no-cache \
+        tini \
+        curl \
+        wget \
+        git \
+        openjdk8-jre \
+        bash
 
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
@@ -44,6 +41,9 @@ COPY --from=zeppelin-distribution /opt/zeppelin/k8s ${ZEPPELIN_HOME}/k8s
 COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/spark ${ZEPPELIN_HOME}/interpreter/spark
 COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/md ${ZEPPELIN_HOME}/interpreter/md
 COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/sh ${ZEPPELIN_HOME}/interpreter/sh
+COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/r ${ZEPPELIN_HOME}/interpreter/r
+COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/jdbc ${ZEPPELIN_HOME}/interpreter/jdbc
+COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/python ${ZEPPELIN_HOME}/interpreter/python
 
 RUN mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/notebook" "${ZEPPELIN_HOME}/local-repo" && \
      # Allow process to edit /etc/passwd, to create a user entry for zeppelin

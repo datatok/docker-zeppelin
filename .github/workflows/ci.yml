@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - ci
+      - dev
     tags:
       - 'v*'
 
@@ -13,10 +14,17 @@ jobs:
   docker-build:
     name: Package app as Docker image
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+        - flavor: server
+          zeppelin_version: 0.10.1
+        - flavor: interpreter
+          zeppelin_version: 0.10.1
     
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: datatok/zeppelin
 
     steps:
 
@@ -42,16 +50,20 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=edge,prefix=${{ matrix.flavor }}-${{ matrix.zeppelin_version }}-,branch=main
+            type=ref,enable=true,prefix=${{ matrix.flavor }}-${{ matrix.zeppelin_version }}-,event=tag
+            type=edge,prefix=${{ matrix.flavor }}-${{ matrix.zeppelin_version }}-,branch=dev
 
       -
         name: Build and push
         id: docker_build
         uses: docker/build-push-action@v3
         with:
-          context: src
+          context: src/server
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-            zeppelin_version=0.10.1
+            zeppelin_version=${{ matrix.zeppelin_version }}
