@@ -25,6 +25,7 @@ jobs:
     
     env:
       REGISTRY: ghcr.io
+      IMAGE_NAME: datatok/zeppelin-${{ matrix.flavor }}
 
     steps:
 
@@ -51,9 +52,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=edge,prefix=${{ matrix.flavor }}-${{ matrix.zeppelin_version }}-,branch=main
-            type=ref,enable=true,prefix=${{ matrix.flavor }}-${{ matrix.zeppelin_version }}-,event=tag
-            type=edge,prefix=${{ matrix.flavor }}-${{ matrix.zeppelin_version }}-,branch=dev
+            type=edge,prefix=${{ matrix.zeppelin_version }}-,branch=main
+            type=ref,enable=true,prefix=-${{ matrix.zeppelin_version }}-,event=tag
+            type=edge,prefix=${{ matrix.zeppelin_version }}-,branch=dev
 
       -
         name: Build and push
