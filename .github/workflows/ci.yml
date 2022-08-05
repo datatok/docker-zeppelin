@@ -61,7 +61,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v3
         with:
-          context: src/server
+          context: src/${{ matrix.flavor }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
