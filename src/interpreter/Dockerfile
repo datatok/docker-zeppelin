@@ -6,9 +6,7 @@ FROM ubuntu:20.04
 
 ARG zeppelin_version
 
-ENV LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk \
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
     VERSION="${zeppelin_version}" \
     HOME="/opt/zeppelin" \
     ZEPPELIN_HOME="/opt/zeppelin" \
@@ -20,7 +18,7 @@ ENV LANG=en_US.UTF-8 \
 
 RUN set -ex && \
     apt-get -y update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jre-headless wget tini && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jre-headless wget tini curl git && \
     # Cleanup
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoclean && \
@@ -28,6 +26,7 @@ RUN set -ex && \
 
 COPY --from=zeppelin-distribution /opt/zeppelin/bin ${ZEPPELIN_HOME}/bin
 COPY --from=zeppelin-distribution /opt/zeppelin/conf ${ZEPPELIN_HOME}/conf
+COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar ${ZEPPELIN_HOME}/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar
 
 # copy k8s files
 COPY --from=zeppelin-distribution /opt/zeppelin/k8s ${ZEPPELIN_HOME}/k8s
