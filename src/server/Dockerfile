@@ -48,7 +48,9 @@ RUN mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/no
      # Allow process to edit /etc/passwd, to create a user entry for zeppelin
     chgrp root /etc/passwd && chmod ug+rw /etc/passwd && \
     # Give access to some specific folders
-    chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/conf" "${ZEPPELIN_HOME}/notebook" "${ZEPPELIN_HOME}/local-repo"
+    chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/conf" "${ZEPPELIN_HOME}/notebook" "${ZEPPELIN_HOME}/local-repo" && \
+    # user "zeppelin" cant write to /etc, delete this unused file to prevent download to int
+    rm -f /etc/krb5.conf
 
 # add zeppelin user
 RUN adduser --home ${ZEPPELIN_HOME} --no-create-home --disabled-password --uid ${ZEPPELIN_USER_UID} ${ZEPPELIN_USER_NAME} && \

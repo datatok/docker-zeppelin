@@ -2,6 +2,14 @@ version: "2"
 
 services:
 
+  docker:
+    image: bobrik/socat
+    command: "TCP-LISTEN:1234,fork UNIX-CONNECT:/var/run/docker.sock"
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+    - 1234:1234
+
   spark:
     image: ghcr.io/datatok/spark:v3.2.1-1
     volumes:
@@ -10,26 +18,34 @@ services:
     - cp -r /opt/spark /opt/spark_docker
 
   server:
-    build: 
-      context: ../src/server
-      args:
-        zeppelin_version: 0.10.1
+    image: ghcr.io/datatok/zeppelin-server:0.10.1-edge
+    #build: 
+    #  context: ../src/server
+    #  args:
+    #    zeppelin_version: 0.10.1
+    environment:
+      #ZEPPELIN_IN_DOCKER: "true"
+      ZEPPELIN_RUN_MODE: docker
+      DOCKER_HOST: http://docker:1234
+      ZEPPELIN_DOCKER_CONTAINER_IMAGE: ghcr.io/datatok/zeppelin-interpreter:0.10.1-edge
+      ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT: 12000000
     ports:
     - 8080:8080
 
   int:
-    build: 
-      context: ../src/interpreter
-      args:
-        zeppelin_version: 0.10.1
-    command:
+    image: ghcr.io/datatok/zeppelin-interpreter:0.10.1-edge
+    #build:
+    #  context: ../src/interpreter
+    #  args:
+    #    zeppelin_version: 0.10.1
+    command: # /opt/zeppelin/bin/interpreter.sh -d /opt/zeppelin/interpreter/spark -c server -p 45103 -g spark -l /tmp/local-repo/spark
     - /opt/zeppelin/bin/interpreter.sh
     - '-d'
     - /opt/zeppelin/interpreter/spark
     - '-r'
     - '12321:12321'
     - '-c'
-    - zep
+    - server
     - '-p'
     - '38853'
     - '-i'

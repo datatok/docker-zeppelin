@@ -20,7 +20,9 @@ jobs:
         include:
         - flavor: server
           zeppelin_version: 0.10.1
-        - flavor: interpreter
+        - flavor: interpreter-spark
+          zeppelin_version: 0.10.1
+        - flavor: interpreter-r
           zeppelin_version: 0.10.1
     
     env:

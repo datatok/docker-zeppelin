@@ -12,8 +12,12 @@ matplotlib
 ipykernel
 jupyter_client
 bokeh
+plotly
 
 # R packages
+r-base=3
+r-data.table
+r-irkernel
 r-evaluate
 r-base64enc
 r-knitr
