@@ -10,6 +10,7 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
     VERSION="${zeppelin_version}" \
     HOME="/opt/zeppelin" \
     ZEPPELIN_HOME="/opt/zeppelin" \
+    IPYTHONDIR="/opt/zeppelin/ipython" \
     ZEPPELIN_ADDR="0.0.0.0" \
     ZEPPELIN_WAR_TEMPDIR="/tmp/webapps" \
     ZEPPELIN_USER_NAME=zeppelin \
@@ -17,8 +18,15 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
     PATH=/opt/conda/bin:$PATH
 
 RUN set -ex && \
+    mkdir -p /etc/ssl/certs/java && \
     apt-get -y update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jre-headless wget tini curl git && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        openjdk-8-jre-headless \
+        wget \
+        tini \
+        curl \
+        git \
+    && \
     # Cleanup
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoclean && \

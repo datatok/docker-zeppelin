@@ -15,7 +15,7 @@ bokeh
 plotly
 
 # R packages
-r-base=3
+r-base
 r-data.table
 r-irkernel
 r-evaluate
