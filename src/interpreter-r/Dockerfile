@@ -2,6 +2,43 @@ ARG zeppelin_version
 
 FROM apache/zeppelin:${zeppelin_version} AS zeppelin-distribution
 
+##
+# Download python & R dependencies
+# See https://jcristharif.com/conda-docker-tips.html
+# See https://pythonspeed.com/articles/conda-docker-image-size/
+##
+FROM continuumio/miniconda3:4.12.0 AS conda-packages
+#FROM condaforge/mambaforge:4.12.0-2
+
+ENV PYTHONDONTWRITEBYTECODE=true
+
+COPY conda_packages.txt /conda_packages.txt
+COPY env_zep.yaml /env_zep.yaml
+
+# Setup manba
+RUN set -ex && \
+    conda config --set always_yes yes --set changeps1 no && \
+    conda info -a && \
+    conda config --add channels conda-forge && \
+    conda install -c conda-forge mamba && \
+    conda install -c main conda-pack
+
+# Install python and R packages via conda
+RUN set -ex && \
+    mamba env create -f /env_zep.yaml
+
+# Package all dependencies to get rid of conda
+RUN conda pack \
+        --exclude *.js.map \
+        --exclude *.pyc \
+        --exclude *.a \
+        --name python_3_with_R \
+        --ignore-missing-files \
+        --output /python_3_with_R.tar.gz
+
+##
+# The final image
+##
 FROM ubuntu:20.04
 
 ARG zeppelin_version
@@ -15,12 +52,12 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
     ZEPPELIN_WAR_TEMPDIR="/tmp/webapps" \
     ZEPPELIN_USER_NAME=zeppelin \
     ZEPPELIN_USER_UID=1000 \
-    PATH=/opt/conda/bin:$PATH
+    PATH=/opt/conda/envs/python_3_with_R/bin:$PATH
 
 RUN set -ex && \
     mkdir -p /etc/ssl/certs/java && \
-    apt-get -y update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    apt-get -y -qq update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install -y \
         openjdk-8-jre-headless \
         wget \
         tini \
@@ -29,8 +66,8 @@ RUN set -ex && \
     && \
     # Cleanup
     rm -rf /var/lib/apt/lists/* && \
-    apt-get autoclean && \
-    apt-get clean
+    apt-get -qq autoclean && \
+    apt-get -qq clean
 
 COPY --from=zeppelin-distribution /opt/zeppelin/bin ${ZEPPELIN_HOME}/bin
 COPY --from=zeppelin-distribution /opt/zeppelin/conf ${ZEPPELIN_HOME}/conf
@@ -47,32 +84,17 @@ COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/r ${ZEPPELIN_HOME}/i
 COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/jdbc ${ZEPPELIN_HOME}/interpreter/jdbc
 COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/python ${ZEPPELIN_HOME}/interpreter/python
 
+# copy from conda
+COPY --from=conda-packages /python_3_with_R.tar.gz /tmp/python_3_with_R.tar.gz
 
-# Decide: Install conda to manage python and R packages. Maybe adjust the packages in pip_packages.txt or conda_packages.txt
-ARG miniconda_version="py38_4.8.3"
-ARG miniconda_sha256="879457af6a0bf5b34b48c12de31d4df0ee2f06a8e68768e5758c3293b2daf688"
-# Install python and R packages via conda
-COPY conda_packages.txt /conda_packages.txt
 # Some python packages are not available via conda, so we are using pip
 COPY pip_packages.txt /pip_packages.txt
-RUN set -ex && \
-    wget -nv https://repo.anaconda.com/miniconda/Miniconda3-${miniconda_version}-Linux-x86_64.sh -O miniconda.sh && \
-    echo "${miniconda_sha256} miniconda.sh" > anaconda.sha256 && \
-    sha256sum --strict -c anaconda.sha256 && \
-    bash miniconda.sh -b -p /opt/conda && \
-    conda config --set always_yes yes --set changeps1 no && \
-    conda info -a && \
-    conda config --add channels conda-forge && \
-    conda install -y --quiet --file /conda_packages.txt && \
-    pip install -q -r /pip_packages.txt  && \
-    # Cleanup
-    rm -v miniconda.sh anaconda.sha256  && \
-    # Cleanup based on https://github.com/ContinuumIO/docker-images/commit/cac3352bf21a26fa0b97925b578fb24a0fe8c383
-    find /opt/conda/ -follow -type f -name '*.a' -delete && \
-    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
-    conda clean -ay
-    # Allow to modify conda packages. This allows malicious code to be injected into other interpreter sessions, therefore it is disabled by default
-    # chmod -R ug+rwX /opt/conda
+
+# Install python & dependencies
+RUN mkdir -p /opt/conda/envs/python_3_with_R && \
+    tar -xzf /tmp/python_3_with_R.tar.gz -C /opt/conda/envs/python_3_with_R/ && \
+    rm -rf /tmp/* && \
+    pip3 install -q -r /pip_packages.txt
 
 RUN mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo" && \
      # Allow process to edit /etc/passwd, to create a user entry for zeppelin
