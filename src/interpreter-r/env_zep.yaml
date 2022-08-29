@@ -1,7 +1,9 @@
 name: python_3_with_R
+
 channels:
   - conda-forge
   - defaults
+
 dependencies:
 - python=3.8
 
