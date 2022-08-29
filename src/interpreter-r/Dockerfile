@@ -34,7 +34,9 @@ RUN conda pack \
         --exclude *.a \
         --name python_3_with_R \
         --ignore-missing-files \
-        --output /python_3_with_R.tar.gz
+        --dest-prefix /opt/conda/envs/python_3_with_R \
+        --output /python_3_with_R.tar.gz \
+        --quiet
 
 ##
 # The final image
@@ -103,7 +105,7 @@ RUN mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/lo
     chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo"
 
 # add zeppelin user
-RUN adduser --home ${ZEPPELIN_HOME} --no-create-home --disabled-password --uid ${ZEPPELIN_USER_UID} ${ZEPPELIN_USER_NAME} && \
+RUN useradd --home-dir ${ZEPPELIN_HOME} --no-create-home --uid ${ZEPPELIN_USER_UID} ${ZEPPELIN_USER_NAME} && \
     chown -R ${ZEPPELIN_USER_UID} ${ZEPPELIN_HOME}
 
 USER ${ZEPPELIN_USER_UID}
