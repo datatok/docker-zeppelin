@@ -19,7 +19,7 @@ RUN set -ex && \
     conda config --set always_yes yes --set changeps1 no && \
     conda info -a && \
     conda config --add channels conda-forge && \
-    conda install -c main conda-pack
+    conda install --quiet --freeze-installed -c main conda-pack
 
 # Install python and R packages
 RUN mamba env create \

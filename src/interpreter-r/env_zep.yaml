@@ -34,4 +34,4 @@ dependencies:
 - r-knitr
 - r-ggplot2
 - r-shiny
-- r-googlevis
+- r-dplyr
