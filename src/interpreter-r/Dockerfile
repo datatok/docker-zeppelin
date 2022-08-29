@@ -7,26 +7,26 @@ FROM apache/zeppelin:${zeppelin_version} AS zeppelin-distribution
 # See https://jcristharif.com/conda-docker-tips.html
 # See https://pythonspeed.com/articles/conda-docker-image-size/
 ##
-FROM continuumio/miniconda3:4.12.0 AS conda-packages
-#FROM condaforge/mambaforge:4.12.0-2
+#FROM continuumio/miniconda3:4.12.0 AS conda-packages
+FROM condaforge/mambaforge:4.13.0-1 AS conda-packages
 
 ENV PYTHONDONTWRITEBYTECODE=true
 
 COPY env_zep.yaml /env_zep.yaml
 
-# Setup manba
+# Setup conda
 RUN set -ex && \
     conda config --set always_yes yes --set changeps1 no && \
     conda info -a && \
     conda config --add channels conda-forge && \
-    conda install -c conda-forge mamba && \
     conda install -c main conda-pack
 
-# Install python and R packages via conda
-RUN set -ex && \
-    mamba env create -f /env_zep.yaml
+# Install python and R packages
+RUN mamba env create \
+        --quiet \
+        --file /env_zep.yaml
 
-# Package all dependencies to get rid of conda
+# Pack all stuff to get rid of conda
 RUN conda pack \
         --exclude *.js.map \
         --exclude *.pyc \
