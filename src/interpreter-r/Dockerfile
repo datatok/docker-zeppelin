@@ -12,7 +12,6 @@ FROM continuumio/miniconda3:4.12.0 AS conda-packages
 
 ENV PYTHONDONTWRITEBYTECODE=true
 
-COPY conda_packages.txt /conda_packages.txt
 COPY env_zep.yaml /env_zep.yaml
 
 # Setup manba
