@@ -7,7 +7,7 @@ on:
       - ci
       - dev
     tags:
-      - 'v*'
+      - '*'
 
 jobs:
 
@@ -57,9 +57,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=edge,prefix=${{ matrix.zeppelin_version }}-,branch=main
-            type=ref,enable=true,prefix=-${{ matrix.zeppelin_version }}-,event=tag
-            type=edge,prefix=${{ matrix.zeppelin_version }}-,branch=dev
+            type=edge,prefix=v${{ matrix.zeppelin_version }}-,branch=main
+            type=ref,enable=true,prefix=v${{ matrix.zeppelin_version }}-,event=tag
+            type=edge,prefix=v${{ matrix.zeppelin_version }}-,branch=dev
 
       -
         name: Build and push
