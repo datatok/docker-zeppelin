@@ -2,14 +2,6 @@ version: "2"
 
 services:
 
-  docker:
-    image: bobrik/socat
-    command: "TCP-LISTEN:1234,fork UNIX-CONNECT:/var/run/docker.sock"
-    volumes:
-    - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-    - 1234:1234
-
   spark:
     image: ghcr.io/datatok/spark:v3.2.1-1
     volumes:
@@ -18,7 +10,6 @@ services:
     - cp -r /opt/spark /opt/spark_docker
 
   server:
-    #image: ghcr.io/datatok/zeppelin-server:0.10.1-edge
     build: 
       context: ../src/server
       args:
@@ -36,11 +27,10 @@ services:
     ports:
     - 8080:8080
 
-  int:
-    #image: ghcr.io/datatok/zeppelin-interpreter:0.10.1-edge
-    hostname: int-${ZEP_INT}
+  int-spark:
+    hostname: int-spark
     build:
-      context: ../src/interpreter-r-full
+      context: ../src/interpreter-spark
       args:
         zeppelin_version: 0.10.1
     command:
@@ -50,26 +40,55 @@ services:
         set -ex
 
         /opt/zeppelin/bin/interpreter.sh \
-        -d /opt/zeppelin/interpreter/${ZEP_INT} \
+        -d /opt/zeppelin/interpreter/spark \
         -r '12321:12321' \
         -c server \
         -p 33800 \
         -i r-shared_process \
         -l /tmp/local-repo/spark \
-        -g ${ZEP_INT}
+        -g spark
     ports:
     - 4041:4040
     - 8081:8080
     volumes:
-    #- ./conda_packs:/opt/conda/packs:ro
-    - ./spark-3.3.0:/opt/spark
+    - ./spark:/opt/spark
     #- ../../../ebuildy/zeppelin/zeppelin-distribution/target/zeppelin-0.11.0-SNAPSHOT/zeppelin-0.11.0-SNAPSHOT/interpreter:/opt/zeppelin/interpreter
     - ./interpreter.sh:/opt/zeppelin/bin/interpreter.sh:ro
     environment:
       SPARK_HOME: /opt/spark
       ZEPPELIN_HOME: /opt/zeppelin
       JAVA_HOME: /usr/lib/jvm/java-8-openjdk-arm64
-      ZEP_INT: ${ZEP_INT}
+
+  int-r:
+    hostname: int-r
+    build:
+      context: ../src/interpreter-r
+      args:
+        zeppelin_version: 0.10.1
+    command:
+    - /bin/sh
+    - -c
+    - |
+        set -ex
+
+        /opt/zeppelin/bin/interpreter.sh \
+        -d /opt/zeppelin/interpreter/r \
+        -r '12321:12321' \
+        -c server \
+        -p 33800 \
+        -i r-shared_process \
+        -l /tmp/local-repo/spark \
+        -g r
+    volumes:
+    #- ./conda_packs:/opt/conda/packs:ro
+    #- ./spark-3.3.0:/opt/spark
+    - ./spark:/opt/spark
+    #- ../../../ebuildy/zeppelin/zeppelin-distribution/target/zeppelin-0.11.0-SNAPSHOT/zeppelin-0.11.0-SNAPSHOT/interpreter:/opt/zeppelin/interpreter
+    - ./interpreter.sh:/opt/zeppelin/bin/interpreter.sh:ro
+    environment:
+      SPARK_HOME: /opt/spark
+      ZEPPELIN_HOME: /opt/zeppelin
+      JAVA_HOME: /usr/lib/jvm/java-8-openjdk-arm64
 
   r-packer:
     build:

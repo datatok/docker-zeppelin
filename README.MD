@@ -28,7 +28,7 @@ Interpreters:
 Deps:
 - java openjdk-8-jre-headless
 
-### interpreter-r-full
+### interpreter-r
 
 Heavy image (2 GB) based on ubuntu to run interpreters:
 - spark
@@ -44,10 +44,6 @@ Deps:
 ### r-packer
 
 Use this image to build conda env pack for dev purposes.
-
-### interpreter-r
-
-Only interpreters
 
 ## Usage
 

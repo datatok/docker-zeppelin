@@ -2,6 +2,34 @@ ARG zeppelin_version
 
 FROM apache/zeppelin:${zeppelin_version} AS zeppelin-distribution
 
+##
+# Create own distribution:
+# - copy all interpreter stuff
+##
+FROM alpine:3.16.0 AS my-distribution
+
+ARG zeppelin_version
+
+ENV ZEPPELIN_HOME=/opt/zeppelin
+
+COPY --from=zeppelin-distribution /opt/zeppelin /tmp
+
+RUN \
+    mkdir -p ${ZEPPELIN_HOME} && cd ${ZEPPELIN_HOME} && \
+    mkdir -p \
+        logs run notebook local-repo interpreter && \
+    chmod -R 775 \
+        logs run notebook && \
+    \
+    cd /tmp && \
+    cp  -r \
+        conf lib bin k8s \
+        ${ZEPPELIN_HOME}/ && \
+    cd interpreter && cp -r \
+        spark md sh \
+        zeppelin-interpreter-shaded-${zeppelin_version}.jar \
+        ${ZEPPELIN_HOME}/interpreter/
+
 FROM ubuntu:20.04
 
 ARG zeppelin_version
@@ -30,24 +58,14 @@ RUN set -ex && \
 
 # add zeppelin user
 RUN useradd --home-dir ${ZEPPELIN_HOME} --no-create-home --uid ${ZEPPELIN_USER_UID} ${ZEPPELIN_USER_NAME} # && \
-    mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo" && \
-     # Allow process to edit /etc/passwd, to create a user entry for zeppelin
-    chgrp root /etc/passwd && chmod ug+rw /etc/passwd && \
-    # Give access to some specific folders
-    chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo" && \
-    chown -R ${ZEPPELIN_USER_UID} ${ZEPPELIN_HOME}
+    # Allow process to edit /etc/passwd, to create a user entry for zeppelin
+    chgrp root /etc/passwd && chmod ug+rw /etc/passwd
 
-COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/bin ${ZEPPELIN_HOME}/bin
-COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/conf ${ZEPPELIN_HOME}/conf
-COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar ${ZEPPELIN_HOME}/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar
-
-# copy k8s files
-COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/k8s ${ZEPPELIN_HOME}/k8s
-
-# copy some interpreters
-COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/spark ${ZEPPELIN_HOME}/interpreter/spark
-COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/md ${ZEPPELIN_HOME}/interpreter/md
-COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/sh ${ZEPPELIN_HOME}/interpreter/sh
+# copy zeppelin files
+COPY    --from=my-distribution \
+        --chown=${ZEPPELIN_USER_UID}:${ZEPPELIN_USER_UID} \
+        ${ZEPPELIN_HOME} \
+        ${ZEPPELIN_HOME}
 
 USER ${ZEPPELIN_USER_UID}
 
