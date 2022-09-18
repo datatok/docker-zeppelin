@@ -1,17 +1,21 @@
-This project contains multiple Docker images to run Apache Zeppelin on kuberneters.
+This project contains multiple Docker images to **run Apache Zeppelin on kuberneters**.
+
+We strongly recommand to use datatok helm charts.
 
 Zeppelin interpreters will run on separate Docker containers.
 
-## server
+## Content
 
-Lite image based on alpine to run zeppelin without interpreters.
+### server
+
+Lite image (less than 300MB) based on alpine to run zeppelin without interpreters.
 
 Deps:
 - alpine
 - java openjdk8
 - bash
 
-## interpreter-spark
+### interpreter-spark
 
 Image based on ubuntu to run Spark zeppelin interpreter. 
 The SPARK_HOME folder must be provided at runtime.
@@ -23,11 +27,10 @@ Interpreters:
 
 Deps:
 - java openjdk-8-jre-headless
-- git
 
-## interpreter-r
+### interpreter-r-full
 
-Heavy image based on ubuntu to run interpreters:
+Heavy image (2 GB) based on ubuntu to run interpreters:
 - spark
 - md
 - sh
@@ -37,7 +40,18 @@ Heavy image based on ubuntu to run interpreters:
 
 Deps:
 - java openjdk-8-jre-headless
-- git
+
+### r-packer
+
+Use this image to build conda env pack for dev purposes.
+
+### interpreter-r
+
+Only interpreters
+
+## Usage
+
+See ./dev/docker-compose.yaml
 
 Build:
 

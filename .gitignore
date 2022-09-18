@@ -1,1 +1,6 @@
 dev/spark
+dev/conda_packs
+dev/spark-3.3.0
+dev/spark_datatok.DS_Store
+.vscode/*.log
+.DS_Store

@@ -16,34 +16,38 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
     ZEPPELIN_USER_UID=1000
 
 RUN set -ex && \
-    apt-get -y update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jre-headless wget tini curl git && \
+    mkdir -p /etc/ssl/certs/java && \
+    apt-get -y -qq update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install -y \
+        openjdk-8-jre-headless \
+        tini \
+        curl \
+    && \
     # Cleanup
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get autoclean && \
-    apt-get clean
+    apt-get -qq autoclean && \
+    apt-get -qq clean && \
+    rm -rf /var/cache/* /tmp/* /var/lib/apt
 
-COPY --from=zeppelin-distribution /opt/zeppelin/bin ${ZEPPELIN_HOME}/bin
-COPY --from=zeppelin-distribution /opt/zeppelin/conf ${ZEPPELIN_HOME}/conf
-COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar ${ZEPPELIN_HOME}/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar
-
-# copy k8s files
-COPY --from=zeppelin-distribution /opt/zeppelin/k8s ${ZEPPELIN_HOME}/k8s
-
-# copy some interpreters
-COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/spark ${ZEPPELIN_HOME}/interpreter/spark
-COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/md ${ZEPPELIN_HOME}/interpreter/md
-COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/sh ${ZEPPELIN_HOME}/interpreter/sh
-
-RUN mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo" && \
+# add zeppelin user
+RUN useradd --home-dir ${ZEPPELIN_HOME} --no-create-home --uid ${ZEPPELIN_USER_UID} ${ZEPPELIN_USER_NAME} # && \
+    mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo" && \
      # Allow process to edit /etc/passwd, to create a user entry for zeppelin
     chgrp root /etc/passwd && chmod ug+rw /etc/passwd && \
     # Give access to some specific folders
-    chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo"
-
-# add zeppelin user
-RUN adduser --home ${ZEPPELIN_HOME} --no-create-home --disabled-password --uid ${ZEPPELIN_USER_UID} ${ZEPPELIN_USER_NAME} && \
+    chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/local-repo" && \
     chown -R ${ZEPPELIN_USER_UID} ${ZEPPELIN_HOME}
+
+COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/bin ${ZEPPELIN_HOME}/bin
+COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/conf ${ZEPPELIN_HOME}/conf
+COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar ${ZEPPELIN_HOME}/interpreter/zeppelin-interpreter-shaded-${zeppelin_version}.jar
+
+# copy k8s files
+COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/k8s ${ZEPPELIN_HOME}/k8s
+
+# copy some interpreters
+COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/spark ${ZEPPELIN_HOME}/interpreter/spark
+COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/md ${ZEPPELIN_HOME}/interpreter/md
+COPY --from=zeppelin-distribution --chown=${ZEPPELIN_USER_UID} /opt/zeppelin/interpreter/sh ${ZEPPELIN_HOME}/interpreter/sh
 
 USER ${ZEPPELIN_USER_UID}
 
