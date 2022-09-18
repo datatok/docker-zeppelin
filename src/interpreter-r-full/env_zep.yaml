@@ -11,7 +11,7 @@ dependencies:
 
 # python packages
 - pycodestyle
-- numpy
+- numpy=1.19.5
 - pandas
 - scipy
 - grpcio
@@ -19,14 +19,25 @@ dependencies:
 - protobuf
 - pandasql
 - ipython
+- ipython_genutils
 - matplotlib
 - ipykernel
-- jupyter_client
+- jupyter_client=5
+- hvplot
+- plotnine
+- seaborn
 - bokeh
 - plotly
+- intake
+- intake-parquet
+- intake-xarray
+- altair
+- vega_datasets
+- plotly
+- jinja2=3.0.3
 
 # R packages
-- r-base
+- r-base=3.6
 - r-data.table
 - r-irkernel
 - r-evaluate
@@ -35,3 +46,4 @@ dependencies:
 - r-ggplot2
 - r-shiny
 - r-dplyr
+- r-markdown
